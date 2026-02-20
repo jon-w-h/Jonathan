@@ -488,14 +488,6 @@ body {
   letter-spacing: 0.03em;
 }
 
-@media (max-width: 768px) {
-  .garden-canvas { max-width: 100%; }
-  .leaf { width: 110px; height: 110px; }
-  .leaf-title { font-size: 12px; }
-  .leaf-type { font-size: 8px; }
-  .leaf-icon { width: 32px; height: 32px; font-size: 13px; }
-  .leaf.bloomed { width: 250px; min-height: 130px; padding: 20px 18px; }
-}
 
 /* ─── STORY FLOW ─── */
 .story {
@@ -849,10 +841,6 @@ textarea.form-input {
   color: var(--text-soft);
 }
 
-@media (max-width: 768px) {
-  .modal { padding: 36px 24px; }
-  .form-row { grid-template-columns: 1fr; }
-}
 
 /* ─── FOOTER ─── */
 .footer {
@@ -869,19 +857,79 @@ textarea.form-input {
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
-  .header { padding: 16px 20px; }
-  .header-nav { gap: 20px; }
-  .hero { padding: 100px 20px 60px; }
+  .header { padding: 14px 20px; }
+  .header-name { font-size: 14px; }
+  .header-nav { gap: 16px; }
+  .header-nav a { font-size: 11px; }
+
+  .hero { padding: 90px 20px 50px; min-height: auto; }
+  .hero-title { margin-bottom: 20px; }
+  .hero-sub { font-size: 17px; }
+
+  .portrait-organic { width: 160px; height: 160px; }
+  .portrait-ring { inset: -12px; }
+  .portrait-ring-outer { inset: -28px; }
+  .portrait-wrap { margin-bottom: 36px; }
+
   .metrics { padding: 0 20px; }
+  .metrics-inner { grid-template-columns: 1fr 1fr 1fr; }
+  .metric { padding: 28px 12px; }
+  .metric-value { font-size: 36px; }
+  .metric-value span { font-size: 18px; }
+  .metric-label { font-size: 9px; }
+
+  .garden { padding: 80px 20px; }
+  .garden-header { margin-bottom: 40px; }
+  .garden-canvas { aspect-ratio: auto; height: auto; min-height: 500px; }
+
+  .leaf { width: 96px; height: 96px; }
+  .leaf-title { font-size: 10px; line-height: 1.15; }
+  .leaf-type { font-size: 7px; margin-top: 1px; }
+  .leaf-icon { width: 26px; height: 26px; font-size: 11px; margin-bottom: 4px; }
+  .leaf.bloomed {
+    width: 240px;
+    min-height: 110px;
+    padding: 18px 16px;
+    position: fixed;
+    left: 50% !important;
+    top: 50% !important;
+    z-index: 200;
+  }
+
+  .story { padding: 60px 20px; }
+  .story-header { margin-bottom: 48px; }
+  .story-item { grid-template-columns: 40px 1fr; }
+  .story-title { font-size: 22px; }
+  .story-desc { font-size: 15px; }
+  .story-content { padding: 16px 0 40px 16px; }
+  .story-tag { font-size: 9px; padding: 3px 10px; }
+
+  .trust { padding: 60px 20px; }
+  .trust-name { padding: 12px 16px; font-size: 15px; }
+
+  .contact { padding: 80px 20px; }
+  .contact-link { font-size: 16px; padding: 14px 28px; }
+
+  .footer { flex-direction: column; gap: 6px; padding: 20px; text-align: center; }
+
+  .modal { padding: 32px 20px; border-radius: 16px; }
+  .modal-title { font-size: 24px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-input { font-size: 16px; padding: 12px 14px; }
+
+  .scroll-cue { display: none; }
+}
+
+@media (max-width: 420px) {
+  .hero-title { font-size: 36px; }
+  .hero-sub { font-size: 16px; }
+  .portrait-organic { width: 140px; height: 140px; }
   .metrics-inner { grid-template-columns: 1fr; }
   .metric + .metric { border-left: none; border-top: 1px solid var(--line); }
-  .garden { padding: 100px 20px; }
-  .garden-canvas { height: 1100px; }
-  .leaf { min-width: 130px; padding: 16px 18px; }
-  .story { padding: 80px 20px; }
-  .trust { padding: 60px 20px; }
-  .contact { padding: 100px 20px; }
-  .footer { flex-direction: column; gap: 8px; padding: 20px; }
+  .metric { padding: 24px 16px; }
+  .leaf { width: 82px; height: 82px; }
+  .leaf-title { font-size: 9px; }
+  .leaf-icon { width: 22px; height: 22px; font-size: 10px; margin-bottom: 3px; }
 }
 
 /* ─── SCROLLBAR ─── */
@@ -1242,13 +1290,15 @@ class Spore {
   }
 }
 const spores=[];
-for(let i=0;i<200;i++)spores.push(new Spore());
+const sporeCount = window.innerWidth < 600 ? 80 : 200;
+for(let i=0;i<sporeCount;i++)spores.push(new Spore());
 
 // Flow field lines
 function drawFlowField(){
   const t=time*0.0004;
   ctx.lineWidth=0.8;
-  for(let i=0;i<40;i++){
+  const flowCount = window.innerWidth < 600 ? 15 : 40;
+  for(let i=0;i<flowCount;i++){
     const startX=(noise(i*7.3,t*0.5)*1.4-0.2)*canvas.width;
     const startY=(noise(i*3.1+100,t*0.3)*1.4-0.2)*canvas.height;
     ctx.beginPath();ctx.moveTo(startX,startY);
@@ -1357,11 +1407,15 @@ let nodePositions = []; // {x, y} in px relative to garden
 function layoutCircle() {
   const rect = gardenEl.getBoundingClientRect();
   const w = rect.width;
-  const h = rect.width; // square
+  const isMobile = w < 600;
+  const isSmall = w < 420;
+  const nodeSize = isSmall ? 82 : (isMobile ? 96 : 160);
+  const radius = isSmall ? (w * 0.34) : (isMobile ? (w * 0.35) : (w * 0.38));
+  const h = isMobile ? (radius * 2 + nodeSize + 60) : w;
   const cx = w / 2;
   const cy = h / 2;
-  const isMobile = w < 600;
-  const radius = isMobile ? w * 0.36 : w * 0.38;
+
+  gardenEl.style.height = h + 'px';
 
   nCanvas.width = w * window.devicePixelRatio;
   nCanvas.height = h * window.devicePixelRatio;
@@ -1506,14 +1560,30 @@ function drawNetwork() {
 drawNetwork();
 
 // ─── LEAF CLICK → BLOOM ───
+// Mobile overlay
+const mobileOverlay = document.createElement('div');
+mobileOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(26,24,21,0.3);backdrop-filter:blur(4px);z-index:150;display:none;';
+document.body.appendChild(mobileOverlay);
+mobileOverlay.addEventListener('click', () => {
+  leaves.forEach(l => l.classList.remove('bloomed'));
+  activeLeafId = null;
+  mobileOverlay.style.display = 'none';
+});
+
+const isTouchDevice = window.matchMedia('(max-width: 768px)').matches;
+
 leaves.forEach(leaf => {
-  leaf.addEventListener('click', () => {
+  leaf.addEventListener('click', (e) => {
+    e.stopPropagation();
     const wasBloomed = leaf.classList.contains('bloomed');
     leaves.forEach(l => l.classList.remove('bloomed'));
+    mobileOverlay.style.display = 'none';
+
     if (!wasBloomed) {
       leaf.classList.add('bloomed');
       activeLeafId = leaf.id;
-      // Fire burst of pulses along active connections
+      if (isTouchDevice) mobileOverlay.style.display = 'block';
+      // Fire burst of pulses
       const conns = leaf.dataset.connections?.split(',') || [];
       const idx = leafArr.indexOf(leaf);
       conns.forEach(tid => {
