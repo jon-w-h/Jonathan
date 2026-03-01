@@ -399,32 +399,10 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   box-shadow: 0 2px 20px rgba(0,0,0,0.03);
   z-index: 10;
   transform: translate(-50%, -50%);
-}
-
-.leaf:hover {
-  border-color: var(--accent);
-  box-shadow: 0 8px 40px rgba(45,90,61,0.1);
-  transform: translate(-50%, -50%) scale(1.1);
-  z-index: 20;
-}
-
-.leaf.bloomed {
-  width: 300px;
-  height: auto;
-  min-height: 160px;
-  border-radius: 24px;
-  border-color: var(--accent);
-  background: white;
-  box-shadow: 0 16px 60px rgba(45,90,61,0.12);
-  z-index: 30;
-  padding: 28px 24px;
-  transform: translate(-50%, -50%) scale(1);
 }
 
 .leaf-icon {
@@ -440,11 +418,6 @@ body {
   transition: all 0.4s;
   margin-bottom: 8px;
   flex-shrink: 0;
-}
-
-.leaf.bloomed .leaf-icon {
-  background: var(--accent);
-  color: white;
 }
 
 .leaf-title {
@@ -464,23 +437,7 @@ body {
 }
 
 .leaf-body {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--text-soft);
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: all 0.5s ease;
-  text-align: left;
-}
-
-.leaf.bloomed .leaf-body {
-  max-height: 220px;
-  opacity: 1;
+  display: none;
 }
 
 .leaf-tag {
@@ -907,16 +864,6 @@ textarea.form-input {
   .leaf-title { font-size: 10px; line-height: 1.15; }
   .leaf-type { font-size: 7px; margin-top: 1px; }
   .leaf-icon { width: 26px; height: 26px; font-size: 11px; margin-bottom: 4px; }
-  .leaf.bloomed {
-    width: 240px;
-    min-height: 110px;
-    padding: 18px 16px;
-    position: fixed;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 200;
-  }
 
   .story { padding: 60px 20px; }
   .story-header { margin-bottom: 48px; }
@@ -1846,36 +1793,17 @@ leafArr.forEach((leaf, i) => {
   });
 });
 
-// Active node tracking
-let activeLeafId = null;
-
 // Draw connections on canvas
 function drawNetwork() {
   const w = nCanvas.width / window.devicePixelRatio;
   const h = nCanvas.height / window.devicePixelRatio;
   nCtx.clearRect(0, 0, w, h);
 
-  // Get active connections
-  const activeConns = new Set();
-  if (activeLeafId !== null) {
-    const leaf = leafMap[activeLeafId];
-    const conns = leaf?.dataset.connections?.split(',') || [];
-    const idx = leafArr.indexOf(leaf);
-    conns.forEach(tid => {
-      const j = leafArr.indexOf(leafMap[tid]);
-      const key = Math.min(idx, j) + '-' + Math.max(idx, j);
-      activeConns.add(key);
-    });
-  }
-
   // Draw connections as organic curves
   connectionPairs.forEach(([i, j]) => {
     const from = nodePositions[i];
     const to = nodePositions[j];
     if (!from || !to) return;
-
-    const key = Math.min(i, j) + '-' + Math.max(i, j);
-    const isActive = activeConns.has(key);
 
     // Curved connection through center-ish
     const cx = (from.x + to.x) / 2;
@@ -1893,14 +1821,8 @@ function drawNetwork() {
     nCtx.beginPath();
     nCtx.moveTo(from.x, from.y);
     nCtx.quadraticCurveTo(cpx, cpy, to.x, to.y);
-
-    if (isActive) {
-      nCtx.strokeStyle = 'rgba(45,90,61,0.3)';
-      nCtx.lineWidth = 2;
-    } else {
-      nCtx.strokeStyle = 'rgba(45,90,61,0.08)';
-      nCtx.lineWidth = 1;
-    }
+    nCtx.strokeStyle = 'rgba(45,90,61,0.08)';
+    nCtx.lineWidth = 1;
     nCtx.stroke();
   });
 
@@ -1951,47 +1873,6 @@ function drawNetwork() {
   requestAnimationFrame(drawNetwork);
 }
 drawNetwork();
-
-// ─── LEAF CLICK → BLOOM ───
-// Mobile overlay
-const mobileOverlay = document.createElement('div');
-mobileOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(26,24,21,0.3);backdrop-filter:blur(4px);z-index:150;display:none;';
-document.body.appendChild(mobileOverlay);
-mobileOverlay.addEventListener('click', () => {
-  leaves.forEach(l => l.classList.remove('bloomed'));
-  activeLeafId = null;
-  mobileOverlay.style.display = 'none';
-});
-
-const isTouchDevice = window.matchMedia('(max-width: 768px)').matches;
-
-leaves.forEach(leaf => {
-  leaf.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const wasBloomed = leaf.classList.contains('bloomed');
-    leaves.forEach(l => l.classList.remove('bloomed'));
-    mobileOverlay.style.display = 'none';
-
-    if (!wasBloomed) {
-      leaf.classList.add('bloomed');
-      activeLeafId = leaf.id;
-      if (isTouchDevice) mobileOverlay.style.display = 'block';
-      // Fire burst of pulses
-      const conns = leaf.dataset.connections?.split(',') || [];
-      const idx = leafArr.indexOf(leaf);
-      conns.forEach(tid => {
-        const j = leafArr.indexOf(leafMap[tid]);
-        if (j >= 0) {
-          pulses.push(new Pulse(idx, j));
-          setTimeout(() => pulses.push(new Pulse(idx, j)), 200);
-          setTimeout(() => pulses.push(new Pulse(idx, j)), 400);
-        }
-      });
-    } else {
-      activeLeafId = null;
-    }
-  });
-});
 
 // ─── SCROLL REVEALS ───
 const obs = new IntersectionObserver(entries => {
